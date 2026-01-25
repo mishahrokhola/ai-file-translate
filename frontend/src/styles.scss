@@ -1,0 +1,21 @@
+@forward './scss/reset.scss';
+
+:root[data-theme='light'] {
+  --bg-color: #f8f9fa;
+  --card-bg: #ffffff;
+  --text-main: #212529;
+  --text-muted: #6c757d;
+  --accent: #4f46e5;
+  --border: #e9ecef;
+  --progress-bg: #e9ecef;
+}
+
+:root[data-theme='dark'] {
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --accent: #818cf8;
+  --border: #334155;
+  --progress-bg: #334155;
+}

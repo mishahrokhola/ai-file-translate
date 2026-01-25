@@ -1,0 +1,31 @@
+# Compiled output
+/dist
+/node_modules
+
+# Environment variables (ВКРАЙ ВАЖЛИВО: не видаляй цей рядок!)
+.env
+.env.development
+.env.production
+.env.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/logs
+
+# OS Metadata
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+/.idea
+/.vscode
+*.swp
+*.swo
+
+# Testing
+/coverage
+
+# NestJS specific
+.terser-tmp

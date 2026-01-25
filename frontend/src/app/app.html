@@ -1,0 +1,58 @@
+<div class="main-container">
+  <header>
+    <div class="logo">Gemini<span>Translator</span></div>
+    <button class="theme-toggle" (click)="themeService.toggleTheme()">
+      {{ themeService.theme() === 'light' ? '🌙' : '☀️' }}
+    </button>
+  </header>
+
+  <main class="card">
+    <div class="upload-area" [class.disabled]="isTranslating()">
+      <label class="drop-zone">
+        <span class="icon">📄</span>
+        <span class="text">Оберіть файл фанфіка (.txt)</span>
+        <input
+          #fileInput
+          type="file"
+          (change)="onFileSelected($event)"
+          [disabled]="isTranslating()"
+          accept=".txt"
+        />
+      </label>
+    </div>
+
+    @if (isTranslating()) {
+      <div class="status-container">
+        <div class="status-header">
+          <span>Прогрес перекладу</span>
+          <span class="percentage">{{ progress() }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="progress()"></div>
+        </div>
+        <p class="status-hint">AI аналізує та перекладає ваш текст...</p>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="error-alert">
+        <span class="icon">⚠️</span>
+        <div class="error-content">
+          <strong>Помилка:</strong>
+          <p>{{ errorMessage() }}</p>
+        </div>
+        <button class="close-btn" (click)="errorMessage.set(null)">✕</button>
+      </div>
+    }
+
+    @if (readyFile(); as fileName) {
+      <div class="result-card">
+        <div class="file-info">
+          <span class="check">✅</span>
+          <span class="filename">{{ fileName }}</span>
+        </div>
+        <button class="btn-download" (click)="download()">Завантажити результат</button>
+      </div>
+    }
+  </main>
+</div>
