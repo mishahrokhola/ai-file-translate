@@ -1,58 +1,201 @@
-<div class="main-container">
-  <header>
-    <div class="logo">Gemini<span>Translator</span></div>
-    <button class="theme-toggle" (click)="themeService.toggleTheme()">
-      {{ themeService.theme() === 'light' ? '🌙' : '☀️' }}
-    </button>
-  </header>
+<div
+  class="min-h-screen w-full flex flex-col items-center justify-center p-0 sm:p-6 lg:p-12 font-sans relative"
+>
+  <div class="relative w-full max-w-md md:max-w-xl lg:max-w-2xl">
+    <div class="fixed top-6 right-6 sm:absolute sm:top-6 sm:right-6 z-50">
+      <button
+        (click)="themeService.toggleTheme()"
+        class="cursor-pointer select-none p-2.5 sm:p-3 rounded-full bg-white dark:bg-slate-800 shadow-md hover:shadow-lg transition-all text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 active:scale-90"
+        aria-label="Toggle Theme"
+      >
+        @if (!isDarkMode()) {
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="sm:w-6 sm:h-6"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <path
+              d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"
+            />
+          </svg>
+        } @else {
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="sm:w-6 sm:h-6"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        }
+      </button>
+    </div>
+  </div>
 
-  <main class="card">
-    <div class="upload-area" [class.disabled]="isTranslating()">
-      <label class="drop-zone">
-        <span class="icon">📄</span>
-        <span class="text">Оберіть файл фанфіка (.txt)</span>
-        <input
-          #fileInput
-          type="file"
-          (change)="onFileSelected($event)"
-          [disabled]="isTranslating()"
-          accept=".txt"
-        />
-      </label>
+  <div
+    class="w-full sm:max-w-md md:max-w-xl lg:max-w-2xl min-h-screen sm:min-h-0 bg-white dark:bg-slate-900 rounded-none sm:rounded-3xl shadow-2xl border-x-0 sm:border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-300 flex flex-col justify-center sm:block"
+  >
+    <div class="px-6 sm:px-8 pt-8 sm:pt-10 pb-4 sm:pb-6 text-center">
+      <h1
+        class="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2"
+      >
+        MI Перекладач
+      </h1>
+      <p
+        class="text-sm sm:text-base text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2"
+      >
+        English <span class="text-slate-300">→</span> Українська
+      </p>
     </div>
 
-    @if (isTranslating()) {
-      <div class="status-container">
-        <div class="status-header">
-          <span>Прогрес перекладу</span>
-          <span class="percentage">{{ progress() }}%</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" [style.width.%]="progress()"></div>
-        </div>
-        <p class="status-hint">AI аналізує та перекладає ваш текст...</p>
-      </div>
-    }
+    <div class="p-6 sm:p-8">
+      @if (state() === 'IDLE' || state() === 'ERROR') {
+        <div
+          #dropHandler="dragDropHandler"
+          dragDropHandler
+          (click)="triggerFileInput()"
+          [class.border-blue-500]="dropHandler.isDragging()"
+          [class.bg-blue-50]="dropHandler.isDragging() && !isDarkMode()"
+          [class.bg-slate-800]="dropHandler.isDragging() && isDarkMode()"
+          class="group relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 sm:p-12 lg:p-16 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 gap-4"
+        >
+          <input
+            #fileInput
+            type="file"
+            class="hidden"
+            (change)="onFileSelected($event)"
+            accept=".txt,.docx,.pdf,.md"
+          />
 
-    @if (errorMessage()) {
-      <div class="error-alert">
-        <span class="icon">⚠️</span>
-        <div class="error-content">
-          <strong>Помилка:</strong>
-          <p>{{ errorMessage() }}</p>
-        </div>
-        <button class="close-btn" (click)="errorMessage.set(null)">✕</button>
-      </div>
-    }
+          <div
+            class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="sm:w-8 sm:h-8"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
 
-    @if (readyFile(); as fileName) {
-      <div class="result-card">
-        <div class="file-info">
-          <span class="check">✅</span>
-          <span class="filename">{{ fileName }}</span>
+          <div class="text-center">
+            <p class="text-base sm:text-lg font-medium text-slate-700 dark:text-slate-200">
+              Перетягніть файл
+            </p>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">або натисніть для вибору</p>
+          </div>
+
+          <div
+            class="mt-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 rounded-full"
+          >
+            ТІЛЬКИ .TXT
+          </div>
         </div>
-        <button class="btn-download" (click)="download()">Завантажити результат</button>
-      </div>
-    }
-  </main>
+      }
+
+      @if (state() === 'UPLOADING' || state() === 'TRANSLATING') {
+        <div
+          class="py-6 sm:py-10 flex flex-col items-center animate-in fade-in zoom-in duration-300"
+        >
+          <div class="relative w-16 h-16 sm:w-20 sm:h-20 mb-6 flex items-center justify-center">
+            <div
+              class="absolute inset-0 border-4 border-slate-100 dark:border-slate-800 rounded-full"
+            ></div>
+            <div
+              class="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"
+            ></div>
+          </div>
+
+          <h3
+            class="text-lg sm:text-xl font-semibold text-slate-800 dark:text-white mb-2 text-center px-4"
+          >
+            @switch (state()) {
+              @case ('UPLOADING') {
+                Завантаження...
+              }
+              @case ('TRANSLATING') {
+                Перекладаємо...
+              }
+            }
+          </h3>
+
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 truncate max-w-full">
+            {{ readyFile() }}
+          </p>
+
+          <div
+            class="w-full h-2.5 sm:h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative"
+          >
+            <div
+              class="h-full bg-blue-600 transition-all duration-300 ease-out"
+              [style.width.%]="progress()"
+            ></div>
+          </div>
+          <div
+            class="w-full flex justify-between mt-2 text-[10px] sm:text-xs font-mono text-slate-400"
+          >
+            <span>0%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      }
+
+      @if (state() === 'COMPLETED') {
+        <div
+          class="py-6 sm:py-8 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500"
+        >
+          <div
+            class="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 mb-6 text-3xl"
+          >
+            ✓
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2">Готово!</h2>
+          <p
+            class="text-sm sm:text-base text-slate-500 dark:text-slate-400 text-center max-w-xs mb-8"
+          >
+            Файл успішно перекладено.
+          </p>
+
+          <button
+            (click)="downloadFile()"
+            class="w-full py-3.5 sm:py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+          >
+            Завантажити результат
+          </button>
+
+          <button
+            (click)="resetProcess()"
+            class="mt-4 text-xs sm:text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline underline-offset-4"
+          >
+            Інший файл
+          </button>
+        </div>
+      }
+    </div>
+  </div>
 </div>

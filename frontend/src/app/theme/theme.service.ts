@@ -1,4 +1,3 @@
-// src/app/services/theme.service.ts
 import { Injectable, signal, effect } from '@angular/core';
 
 export type Theme = 'light' | 'dark';
@@ -11,7 +10,7 @@ export class ThemeService {
   constructor() {
     effect(() => {
       localStorage.setItem('user-theme', this._theme());
-      document.documentElement.setAttribute('data-theme', this._theme());
+      document.documentElement.classList.toggle('dark', this._theme() === 'dark');
     });
   }
 
