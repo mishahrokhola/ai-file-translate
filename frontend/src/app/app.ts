@@ -1,7 +1,10 @@
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { DecimalPipe } from '@angular/common';
 
 import { FilesService } from './files/files.service';
 import { ThemeService } from './theme/theme.service';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { TranslateService } from './translate/translate.service';
 
 import { DragDropHandler } from './upload/drag-drop-handler';
@@ -11,10 +14,12 @@ type TranslateState = 'IDLE' | 'UPLOADING' | 'TRANSLATING' | 'COMPLETED' | 'ERRO
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
-  imports: [DragDropHandler],
+  imports: [DragDropHandler, DecimalPipe],
 })
 export class App {
   public themeService = inject(ThemeService);
+
+  private toast = inject(HotToastService);
   private filesService = inject(FilesService);
   private translateService = inject(TranslateService);
 
@@ -26,10 +31,22 @@ export class App {
   isDarkMode = computed(() => this.themeService.theme() === 'dark');
 
   fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
+  private allowedFileTypes = computed(() => this.fileInput().nativeElement.accept.split(','));
 
   onDrop(event: DragEvent) {
     const file = event.dataTransfer?.files?.[0];
-    file && this.handleFile(file);
+
+    if (file && !this.isValidFileType(file, this.allowedFileTypes())) {
+      const parts = file.name.split('.');
+      const ext = parts[parts.length - 1];
+
+      this.toast.error(`Файли формату ".${ext}" не підтримуються.`);
+      return;
+    }
+
+    if (file && this.isValidFileType(file, this.allowedFileTypes())) {
+      this.handleFile(file);
+    }
   }
 
   onFileSelected(event: Event) {
@@ -64,7 +81,16 @@ export class App {
 
     this.filesService.upload(file).subscribe({
       next: (res) => this.startStreaming(res.filename),
-      error: () => this.state.set('ERROR'),
+      error: (error) => {
+        this.errorMessage.set('');
+        this.state.set('ERROR');
+
+        if (error instanceof HttpErrorResponse && error.status === 0) {
+          this.errorMessage.set(
+            "Сервер недоступний або немає з'єднання. Перегрузіть сторінку або спробуйте пізніше.",
+          );
+        }
+      },
     });
   }
 
@@ -87,6 +113,16 @@ export class App {
         this.errorMessage.set(err);
         this.resetProcess();
       },
+    });
+  }
+
+  private isValidFileType(file: File, allowedTypes: string[]): boolean {
+    return allowedTypes.some((type) => {
+      if (type.startsWith('.')) {
+        return file.name.toLowerCase().endsWith(type.toLowerCase());
+      }
+
+      return file.type === type;
     });
   }
 }

@@ -1,8 +1,10 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import {
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners,
+  provideZonelessChangeDetection,
+} from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
-// import { provideRouter } from '@angular/router';
-
-// import { routes } from './app.routes';
+import { provideHotToastConfig } from '@ngxpert/hot-toast';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -10,5 +12,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideZonelessChangeDetection(),
     provideBrowserGlobalErrorListeners(),
-  ]
+    provideHotToastConfig({ position: 'bottom-left', className: 'mi-toast' }),
+  ],
 };
