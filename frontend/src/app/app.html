@@ -121,29 +121,58 @@
       @if (state() === 'ERROR' && errorMessage()) {
         <div class="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <div
-            class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 rounded-xl"
+            class="flex flex-col gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 rounded-xl"
           >
-            <div class="flex-shrink-0 text-red-500 dark:text-red-400">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0 text-red-500 dark:text-red-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <p class="flex-1 text-sm font-medium text-red-800 dark:text-red-300">
+                {{ errorMessage() }}
+              </p>
             </div>
 
-            <p class="flex-1 text-sm font-medium text-red-800 dark:text-red-300">
-              {{ errorMessage() }}
-            </p>
+            @if (errorData(); as errorData) {
+              @if (errorData.chunkIndex; as chunkIndex) {
+                <div class="flex justify-end">
+                  <button
+                    (click)="restore(errorData, chunkIndex)"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-all active:scale-95 flex items-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                      />
+                    </svg>
+                    Відновити
+                  </button>
+                </div>
+              }
+            }
           </div>
         </div>
       }
@@ -219,7 +248,7 @@
           </button>
 
           <button
-            (click)="resetProcess()"
+            (click)="startNewFile()"
             class="mt-4 text-xs sm:text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline underline-offset-4"
           >
             Інший файл

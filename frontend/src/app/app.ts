@@ -5,7 +5,7 @@ import { DecimalPipe } from '@angular/common';
 import { FilesService } from './files/files.service';
 import { ThemeService } from './theme/theme.service';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { TranslateService } from './translate/translate.service';
+import { TranslateBookErrorData, TranslateService } from './translate/translate.service';
 
 import { DragDropHandler } from './upload/drag-drop-handler';
 
@@ -26,12 +26,16 @@ export class App {
   state = signal<TranslateState>('IDLE');
   progress = signal(0);
   readyFile = signal<string | null>(null);
+
   errorMessage = signal<string | null>(null);
+  errorData = signal<TranslateBookErrorData | null>(null);
 
   isDarkMode = computed(() => this.themeService.theme() === 'dark');
 
-  fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
-  private allowedFileTypes = computed(() => this.fileInput().nativeElement.accept.split(','));
+  fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  private allowedFileTypes = computed(
+    () => this.fileInput()?.nativeElement?.accept?.split(',') ?? [],
+  );
 
   onDrop(event: DragEvent) {
     const file = event.dataTransfer?.files?.[0];
@@ -61,16 +65,24 @@ export class App {
     filename && this.filesService.download(filename);
   }
 
-  resetProcess() {
-    this.progress.set(0);
-    this.state.set('IDLE');
-    this.readyFile.set(null);
+  restore(errorData: TranslateBookErrorData, chunkIndex: number) {
+    this.startStreaming(errorData.filename, chunkIndex);
+  }
 
-    this.fileInput().nativeElement.value = '';
+  startNewFile(): void {
+    this.state.set('IDLE');
+    this.resetProcess();
   }
 
   triggerFileInput(): void {
-    this.fileInput().nativeElement.click();
+    this.fileInput() && this.fileInput()!.nativeElement.click();
+  }
+
+  private resetProcess() {
+    this.progress.set(0);
+    this.readyFile.set(null);
+
+    this.fileInput() && (this.fileInput()!.nativeElement.value = '');
   }
 
   private handleFile(file: File): void {
@@ -94,23 +106,29 @@ export class App {
     });
   }
 
-  private startStreaming(filename: string) {
+  private startStreaming(filename: string, startFrom = 0) {
     this.state.set('TRANSLATING');
+    this.errorData.set(null);
 
-    this.translateService.trackProgress(filename).subscribe({
+    this.translateService.trackProgress(filename, startFrom).subscribe({
       next: (data) => {
         this.progress.set(data.progress);
 
         if (data.progress === 100) {
-          this.readyFile.set(data.newFilename);
+          this.readyFile.set(data.translatedFilename);
           this.state.set('COMPLETED');
-          this.fileInput().nativeElement.value = '';
+          this.fileInput() && (this.fileInput()!.nativeElement.value = '');
         }
       },
       error: (err) => {
         console.error('SSE Error:', err);
+
+        const message = this.translateService.isErrorData(err) ? err.result[1].errorMessage : err;
+
         this.state.set('ERROR');
-        this.errorMessage.set(err);
+        this.errorMessage.set(message);
+        this.errorData.set(this.translateService.isErrorData(err) ? err : null);
+
         this.resetProcess();
       },
     });

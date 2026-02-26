@@ -1,3 +1,5 @@
+declare type Result<T, E> = [T, null] | [null, E];
+
 declare namespace NodeJS {
   interface ProcessEnv {
     PORT?: `${number}`;
