@@ -4,10 +4,11 @@ import { ConfigModule } from '@nestjs/config';
 
 import { FilesController } from './files/files.controller';
 import { TranslateController } from './translate/translate.controller';
+import { GoogleTranslateService } from './ai/google-translate.service';
 
 @Module({
   imports: [ConfigModule.forRoot()],
   controllers: [FilesController, TranslateController],
-  providers: [GeminiService],
+  providers: [GeminiService, GoogleTranslateService],
 })
 export class AppModule {}
