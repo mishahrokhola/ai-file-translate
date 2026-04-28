@@ -5,8 +5,8 @@ import * as fs from 'fs';
 import { GeminiService } from '../ai/gemini.service';
 
 import { TranslateQueryDto } from 'src/dto/translate-query.dto';
-import { splitTextIntoBigChunks } from 'src/utils/text.utils';
-import { getTranslatedFilename, translatedPath, uploadsPath } from 'src/files/files.utils';
+import { cleanMarkedTags, splitTextIntoBigChunks } from 'src/utils/text.utils';
+import { getTranslatedFilename, getMarkedTranslatedFilename, translatedPath, uploadsPath } from 'src/files/files.utils';
 
 export type TranslateBookData = {
   result: Result<object, { errorMessage: string }>;
@@ -38,16 +38,19 @@ export class TranslateController {
   streamTranslation(@Query() query: TranslateQueryDto): Observable<{ data: TranslateBookData | TranslateBookDone }> {
     const { filename, startFrom: _startFrom } = query;
     const translatedName = getTranslatedFilename(filename);
+    const markedTranslatedName = getMarkedTranslatedFilename(filename);
 
     const filePath = uploadsPath(filename);
     const outPath = translatedPath(translatedName);
     const contextPath = outPath + '.context.json';
+    const markedOutPath = translatedPath(markedTranslatedName);
 
     const startFrom = fs.existsSync(contextPath) && _startFrom ? _startFrom : 0;
 
     if (startFrom === 0) {
       if (fs.existsSync(outPath)) fs.unlinkSync(outPath);
       if (fs.existsSync(contextPath)) fs.unlinkSync(contextPath);
+      if (fs.existsSync(markedOutPath)) fs.unlinkSync(markedOutPath);
     }
 
     const rawText = fs.readFileSync(filePath, 'utf-8');
@@ -77,7 +80,9 @@ export class TranslateController {
           return { data: { ...common, result: [null, error] } satisfies TranslateBookData };
         }
 
-        fs.appendFileSync(outPath, _result[0].translation + '\n\n');
+        fs.appendFileSync(outPath, cleanMarkedTags(_result[0].translation) + '\n\n');
+        fs.appendFileSync(markedOutPath, _result[0].translation + '\n\n');
+
         fs.writeFileSync(contextPath, JSON.stringify({ context: data.updatedContext, lastChunk: chunkIndex }));
 
         return { data: { ...common, result: [{}, null] } satisfies TranslateBookData };

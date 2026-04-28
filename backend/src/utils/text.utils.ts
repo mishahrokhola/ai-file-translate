@@ -2,6 +2,7 @@
  * Розбиває текст на великі частини, намагаючись не розривати абзаци.
  * @param text Повний текст файлу
  * @param maxChars Максимальна кількість символів у чанку (напр. 10000)
+ * @param minChars Мінімальна кількість символів у чанку
  */
 export function splitTextIntoBigChunks(text: string, maxChars = 15000, minChars = 500): string[] {
   const chunks: string[] = [];
@@ -43,4 +44,11 @@ export function splitTextIntoBigChunks(text: string, maxChars = 15000, minChars 
   }
 
   return chunks;
+}
+
+/**
+ * Видаляє всі теги типу <v n="..."> та </v>
+ */
+export function cleanMarkedTags(text: string): string {
+  return text.replace(/<v n=".*?">|<\/v>/g, '').trim();
 }
