@@ -46,9 +46,7 @@ export function splitTextIntoBigChunks(text: string, maxChars = 15000, minChars 
   return chunks;
 }
 
-/**
- * Видаляє всі теги типу <v n="..."> та </v>
- */
+/** Видаляє всі теги маркування персонажів <v та </v> */
 export function cleanMarkedTags(text: string): string {
-  return text.replace(/<v n=".*?">|<\/v>/g, '').trim();
+  return text.replace(/<v\b[^>]*>|<\/v>/g, '').trim();
 }
