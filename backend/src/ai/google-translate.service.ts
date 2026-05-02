@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import translate from 'google-translate-api-next';
-
-export type TranslateBookResult = Result<{ translation: string; updatedContext: string }, { errorMessage: string }>;
+import { translate } from 'google-translate-api-x';
 
 @Injectable()
 export class GoogleTranslateService {
