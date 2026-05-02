@@ -1,0 +1,36 @@
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">Файли</h2>
+  <button
+    (click)="goToUpload.emit()"
+    class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-blue-500/20 transition-all active:scale-95"
+  >
+    <svg width="12" height="12" stroke-width="2.5">
+      <use href="#icon-plus" />
+    </svg>
+    Новий переклад
+  </button>
+</div>
+
+@if (!isLoading()) {
+  @if (books().length > 0) {
+    <div class="space-y-3">
+      @for (book of books(); track book.name) {
+        <book-list-item [book]="book" (download)="onDownload(book.name, $event)" />
+      }
+    </div>
+  } @else {
+    <div class="py-16 text-center animate-in fade-in zoom-in duration-300">
+      <div
+        class="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400"
+      >
+        <svg width="30" height="30" stroke-width="2">
+          <use href="#icon-folder-open" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300">Немає файлів</h3>
+      <p class="text-sm text-slate-400 mt-1 max-w-xs mx-auto">
+        Завантажте файл, щоб він з'явився тут
+      </p>
+    </div>
+  }
+}

@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "generate-api": "npx openapi-typescript http://localhost:3000/api-json --output src/app/core/api/schema.d.ts"
   },
   "prettier": {
     "printWidth": 100,
@@ -46,7 +47,9 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.6",
+    "prettier": "^3.8.3",
     "tailwindcss": "^4.1.18",
     "typescript": "~5.9.2"
   }

@@ -8,7 +8,6 @@ import { provideHotToastConfig } from '@ngxpert/hot-toast';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // provideRouter(routes),
     provideHttpClient(),
     provideZonelessChangeDetection(),
     provideBrowserGlobalErrorListeners(),

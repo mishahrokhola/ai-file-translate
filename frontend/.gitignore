@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Generated
+/src/app/core/api/schema.d.ts

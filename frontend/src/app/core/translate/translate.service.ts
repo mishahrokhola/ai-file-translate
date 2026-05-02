@@ -1,54 +1,30 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { Schemas } from '@core/api';
 
-export type TranslateBookData = {
-  result: TranslateBookResult;
-  progress: number;
-  chunkIndex: number;
-
-  filename: string;
-  translatedFilename: string;
+type TranslateBookEvent = Schemas['TranslateBookDataDto'] | Schemas['TranslateBookDoneDto'];
+export type TranslateBookErrorData = Schemas['TranslateBookDataDto'] & {
+  result: Schemas['ErrorResultDto'];
 };
-
-export type TranslateBookDone = {
-  done: true;
-  progress: number;
-
-  filename: string;
-  translatedFilename: string;
-};
-
-export type TranslateBookErrorData = {
-  result: [null, { errorMessage: string }];
-  progress: number;
-  chunkIndex: number | null; // null on out of bounce
-
-  filename: string;
-  translatedFilename: string;
-};
-
-export type TranslateBookResult = Result<{}, { errorMessage: string }>;
 
 @Injectable({ providedIn: 'root' })
 export class TranslateService {
   private readonly baseUrl = 'http://localhost:3000/translate';
 
-  trackProgress(filename: string, startFrom = 0): Observable<TranslateBookData> {
+  trackProgress(filename: string, startFrom = 0): Observable<TranslateBookEvent> {
     return new Observable((subscriber) => {
       const eventSource = new EventSource(
         `${this.baseUrl}/stream?filename=${filename}&startFrom=${startFrom}`,
       );
 
       eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data) as TranslateBookData | TranslateBookDone;
+        const data = JSON.parse(event.data) as TranslateBookEvent;
 
         if ('done' in data) {
           eventSource.close();
           subscriber.complete();
           return;
         }
-
-        const [, error] = data.result;
 
         subscriber.next(data);
 
@@ -57,7 +33,7 @@ export class TranslateService {
           subscriber.complete();
         }
 
-        if (error) {
+        if (data.result.status === 'error') {
           eventSource.close();
           subscriber.error(data);
         }
@@ -78,6 +54,10 @@ export class TranslateService {
   }
 
   isErrorData(error: unknown): error is TranslateBookErrorData {
-    return !!error && typeof error === 'object' && 'result' in error;
+    if (!error || typeof error !== 'object') return false;
+
+    if (!('result' in error) || !error.result || typeof error.result !== 'object') return false;
+
+    return 'status' in error.result && error.result.status === 'error';
   }
 }
