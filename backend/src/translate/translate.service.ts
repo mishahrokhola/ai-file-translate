@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { map, Observable, of, concat, tap, shareReplay, finalize } from 'rxjs';
-import * as fs from 'fs';
+import { map, Observable, of, concat, tap, shareReplay, finalize, Subject, takeUntil } from 'rxjs';
+import { existsSync, readFileSync, appendFileSync, writeFileSync } from 'fs';
 
 import { FilesService } from '../files/files.service';
 import { GeminiService } from '../ai/gemini.service';
@@ -15,6 +15,7 @@ import { getTranslatedFilename, getMarkedFilename, userBookFolderPath } from 'sr
 @Injectable()
 export class TranslateService {
   private activeStreams = new Map<string, Observable<{ data: TranslateBookDataDto | TranslateBookDoneDto }>>();
+  private stopSignals = new Map<string, Subject<void>>();
 
   constructor(
     private readonly filesService: FilesService,
@@ -40,13 +41,13 @@ export class TranslateService {
     const metaPath = userBookFolderPath(userId, originalFilename, 'meta.json');
     const markedOutPath = userBookFolderPath(userId, originalFilename, markedTranslatedName);
 
-    const startFrom = fs.existsSync(metaPath) && _startFrom ? _startFrom : 0;
+    const startFrom = existsSync(metaPath) && _startFrom ? _startFrom : 0;
 
     if (startFrom === 0) {
       this.filesService.delete([outPath, metaPath, markedOutPath]);
     }
 
-    const rawText = fs.readFileSync(filePath, 'utf-8');
+    const rawText = readFileSync(filePath, 'utf-8');
     const allChunks = splitTextIntoBigChunks(rawText);
     const chunks = allChunks.slice(startFrom);
 
@@ -57,6 +58,9 @@ export class TranslateService {
     if (chunks.length === 0) {
       return doneMessage$;
     }
+
+    const stopSignal$ = new Subject<void>();
+    this.stopSignals.set(key, stopSignal$);
 
     console.log(`[Translate ${originalFilename}] Started translating ${allChunks.length} chunks`);
     const initialContext = this.getInitialContext(userId, originalFilename, startFrom);
@@ -75,17 +79,18 @@ export class TranslateService {
           return { data: { ...common, result: { status: 'error', errorMessage: error.errorMessage } } satisfies TranslateBookDataDto };
         }
 
-        fs.appendFileSync(outPath, cleanMarkedTags(_result[0].translation) + '\n\n');
-        fs.appendFileSync(markedOutPath, _result[0].translation + '\n\n');
+        appendFileSync(outPath, cleanMarkedTags(_result[0].translation) + '\n\n');
+        appendFileSync(markedOutPath, _result[0].translation + '\n\n');
 
         const meta: TranslateBookMeta = { context: data.updatedContext, progress, chunkCount: allChunks.length, lastChunk: chunkIndex };
-        fs.writeFileSync(metaPath, JSON.stringify(meta));
+        writeFileSync(metaPath, JSON.stringify(meta));
 
         return { data: { ...common, result: { status: 'success' } } satisfies TranslateBookDataDto };
       }),
     );
 
     const stream$ = concat(translationStream$, doneMessage$).pipe(
+      takeUntil(stopSignal$),
       finalize(() => this.activeStreams.delete(key)),
       shareReplay(1),
     );
@@ -96,6 +101,18 @@ export class TranslateService {
     this.activeStreams.set(key, stream$);
 
     return stream$;
+  }
+
+  stopStream(userId: number, originalFilename: string): void {
+    const key = `${userId}-${originalFilename}`;
+    const stopSignal$ = this.stopSignals.get(key);
+
+    if (!stopSignal$) return;
+
+    stopSignal$.next();
+    stopSignal$.complete();
+
+    console.log(`[Translate ${originalFilename}] Has been stopped.`);
   }
 
   private getInitialContext(userId: number, originalFilename: string, startFrom: number): string | null {

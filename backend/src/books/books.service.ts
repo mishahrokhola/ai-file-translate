@@ -4,12 +4,16 @@ import { readdirSync, rmSync } from 'fs';
 import { BookDto } from './book.dto';
 
 import { FilesService } from '../files/files.service';
+import { TranslateService } from '../translate/translate.service';
 
 import { userBooksPath, userBookFolderPath, getTranslatedFilename, getMarkedFilename } from '../files/files.utils';
 
 @Injectable()
 export class BooksService {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(
+    private readonly filesService: FilesService,
+    private readonly translateService: TranslateService,
+  ) {}
 
   public getList(userId: number): BookDto[] {
     return readdirSync(userBooksPath(userId), { withFileTypes: true })
@@ -38,10 +42,11 @@ export class BooksService {
 
     try {
       rmSync(path, { recursive: true, force: true });
+      this.translateService.stopStream(userId, filename);
 
-      console.log(`Папку ${path} видалено успішно`);
+      console.log(`Folder "${path}" has been deleted.`);
     } catch (error) {
-      console.error(`Помилка при видаленні ${path}: ${error}`);
+      console.error(`Error while deleting the folder "${path}": ${error}`);
     }
   }
 }

@@ -15,7 +15,11 @@
   @if (books().length > 0) {
     <div class="space-y-3">
       @for (book of books(); track book.name) {
-        <book-list-item [book]="book" (download)="onDownload(book.name, $event)" />
+        <book-list-item
+          [book]="book"
+          (download)="onDownload(book.name, $event)"
+          (delete)="onDelete(book.name)"
+        />
       }
     </div>
   } @else {

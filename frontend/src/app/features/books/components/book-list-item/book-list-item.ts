@@ -22,6 +22,7 @@ export class BookListItem {
 
   book = model.required<Schemas['BookDto']>();
 
+  delete = output<void>();
   download = output<'original' | 'translated' | 'marked'>();
 
   isMenuOpen = signal(false);

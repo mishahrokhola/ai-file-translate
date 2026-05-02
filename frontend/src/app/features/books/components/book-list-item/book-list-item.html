@@ -85,4 +85,12 @@
       }
     </div>
   }
+
+  <button
+    (click)="delete.emit()"
+    class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+    title="Видалити"
+  >
+    <svg width="14" height="14" stroke-width="2"><use href="#icon-trash" /></svg>
+  </button>
 </div>
